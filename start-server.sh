@@ -1,0 +1,9 @@
+#!/bin/bash
+echo "Starting local web server..."
+echo ""
+echo "Open your browser to: http://localhost:8000/index.html"
+echo ""
+echo "Press Ctrl+C to stop the server"
+echo ""
+python3 -m http.server 8000
+

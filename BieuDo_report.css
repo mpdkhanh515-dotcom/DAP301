@@ -1,0 +1,106 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #eef2f7, #f9fbfd);
+  font-family: "Poppins", "Segoe UI", Arial, sans-serif;
+  color: #1e293b;
+  min-height: 100vh;
+}
+
+/* Khung tổng */
+main {
+  padding: 40px 60px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+}
+
+/* Lưới chứa biểu đồ */
+.jp-OutputArea {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: auto;
+  gap: 30px;
+  width: 100%;
+  max-width: 1600px;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(6px);
+  overflow-y: auto;
+  transition: 0.3s ease;
+}
+
+/* Ô chứa từng biểu đồ */
+.jp-OutputArea-child {
+  background: linear-gradient(180deg, #ffffff 0%, #f3f6fb 100%);
+  border-radius: 16px;
+  padding: 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.jp-OutputArea-child:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(180deg, #ffffff 0%, #edf3ff 100%);
+}
+
+/* Hình biểu đồ */
+.jp-RenderedImage img {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  object-fit: contain;
+  display: block;
+  margin-bottom: 10px;
+  transition: transform 0.25s ease;
+}
+
+.jp-OutputArea-child:hover img {
+  transform: scale(1.03);
+}
+
+/* Tiêu đề biểu đồ */
+.jp-OutputArea-child figcaption,
+.jp-OutputArea-child .caption,
+.jp-OutputArea-child h4 {
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  color: #2563eb; /* xanh lam nhấn */
+  margin: 6px 0 0;
+  letter-spacing: 0.3px;
+}
+
+/* Cuộn dọc mượt */
+.jp-OutputArea::-webkit-scrollbar {
+  width: 10px;
+}
+.jp-OutputArea::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #94a3b8, #64748b);
+  border-radius: 8px;
+}
+.jp-OutputArea::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #64748b, #475569);
+}
+
+/* Header giả định (nếu bạn thêm sau này) */
+header {
+  width: 100%;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 25px;
+  letter-spacing: 0.8px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}

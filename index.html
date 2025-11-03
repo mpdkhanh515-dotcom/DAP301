@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trình đọc và lọc dữ liệu CSV/Excel</title>
+    
+    <!-- 1. TailwindCSS CDN để làm đẹp giao diện -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. PapaParse CDN để đọc file .csv -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
+    <!-- 3. SheetJS (xlsx.js) CDN để đọc file .xlsx -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* CSS bổ sung để tối ưu hiển thị */
+        body {
+            background-color: #f3f4f6; /* Màu nền xám nhạt */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        thead th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        tbody tr:hover {
+            background-color: #f0f9ff;
+        }
+        /* Style cho thanh cuộn trên màn hình nhỏ */
+        .table-wrapper {
+            max-height: 65vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <!-- Header -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-700">Trình xem và lọc dữ liệu</h1>
+            <p class="text-gray-500 mt-2">Dữ liệu từ file <strong>DATASET.csv</strong> được tự động tải và hiển thị bên dưới.</p>
+        </header>
+
+        <!-- Nút xem báo cáo -->
+        <div class="mb-4 text-right">
+            <a href="BieuDo_report.html" target="_blank" class="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 mr-2">
+                Xem biểu đồ
+            </a>
+            <a href="research_report.html" target="_blank" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-300">
+                Xem truy vấn
+            </a>
+        </div>
+
+        <!-- Controls: Search -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <div>
+                <label for="search-input" class="block text-sm font-medium text-gray-700 mb-2">Tìm kiếm (tất cả các cột):</label>
+                <input 
+                    id="search-input" 
+                    type="search" 
+                    placeholder="Nhập từ khóa để lọc..."
+                    class="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    disabled
+                >
+            </div>
+        </div>
+
+        <!-- Data Table Display -->
+        <div id="table-container" class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-8 text-center text-gray-500">
+                <p>Đang tải dữ liệu mặc định...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Lấy các element từ DOM
+        const searchInput = document.getElementById('search-input');
+        const tableContainer = document.getElementById('table-container');
+        
+        let fullData = []; // Biến lưu trữ toàn bộ dữ liệu gốc
+
+        // Tự động tải file mặc định khi trang được load
+        document.addEventListener('DOMContentLoaded', loadDefaultFile);
+
+        // Xử lý sự kiện khi người dùng nhập vào ô tìm kiếm
+        searchInput.addEventListener('input', handleSearch);
+
+        /**
+         * Tải và xử lý file DATASET.csv mặc định
+         */
+        async function loadDefaultFile() {
+            const defaultFile = 'DATASET.csv';
+            try {
+                const response = await fetch(defaultFile);
+                if (!response.ok) {
+                    throw new Error(`Không thể tải file ${defaultFile}. Mã lỗi: ${response.status}`);
+                }
+                const csvData = await response.text();
+                parseCSV(csvData);
+            } catch (error) {
+                displayError(`Lỗi khi tải file mặc định: ${error.message}. Hãy chắc chắn file 'DATASET.csv' tồn tại cùng thư mục với file html này.`);
+            }
+        }
+
+        /**
+         * Phân tích dữ liệu CSV bằng PapaParse
+         * @param {string} csvData 
+         */
+        function parseCSV(csvData) {
+            Papa.parse(csvData, {
+                header: true, // Dòng đầu tiên là header
+                skipEmptyLines: true,
+                complete: function(results) {
+                    if (results.errors.length > 0) {
+                        console.error("Lỗi khi parse CSV:", results.errors);
+                        displayError("File CSV có lỗi hoặc định dạng không đúng.");
+                        return;
+                    }
+                    fullData = results.data;
+                    renderTable(fullData);
+                }
+            });
+        }
+
+        /**
+         * Render dữ liệu thành bảng HTML
+         * @param {Array<Object>} data 
+         */
+        function renderTable(data) {
+            if (!data || data.length === 0) {
+                displayError("Không có dữ liệu để hiển thị. File có thể bị rỗng.");
+                return;
+            }
+
+            const headers = Object.keys(data[0]);
+
+            // Tạo a header
+            const thead = `<thead><tr>${headers.map(h => `<th class="p-3 text-left">${h}</th>`).join('')}</tr></thead>`;
+
+            // Tạo các hàng dữ liệu
+            const tbodyRows = data.map(row => {
+                const cells = headers.map(header => `<td class="p-3">${row[header] || ''}</td>`).join('');
+                return `<tr>${cells}</tr>`;
+            }).join('');
+            const tbody = `<tbody>${tbodyRows}</tbody>`;
+
+            // Gộp lại và chèn vào DOM
+            tableContainer.innerHTML = `
+                <div class="table-wrapper">
+                    <table class="min-w-full bg-white">
+                        ${thead}
+                        ${tbody}
+                    </table>
+                </div>
+            `;
+            
+            // Kích hoạt ô tìm kiếm
+            searchInput.disabled = false;
+            searchInput.value = ''; // Reset ô tìm kiếm
+        }
+
+        /**
+         * Lọc bảng dựa trên từ khóa tìm kiếm
+         */
+        function handleSearch() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const tableBody = tableContainer.querySelector('tbody');
+
+            if (!tableBody) return;
+
+            const rows = tableBody.querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                if (rowText.includes(searchTerm)) {
+                    row.style.display = ''; // Hiển thị hàng nếu khớp
+                } else {
+                    row.style.display = 'none'; // Ẩn hàng nếu không khớp
+                }
+            });
+        }
+        
+        /**
+         * Hiển thị thông báo lỗi
+         * @param {string} message 
+         */
+        function displayError(message) {
+            tableContainer.innerHTML = `<div class="p-8 text-center text-red-600 bg-red-50 rounded-lg">${message}</div>`;
+            searchInput.disabled = true;
+        }
+
+    </script>
+
+</body>
+</html>
